@@ -1,14 +1,14 @@
-# charm-simple
+# charm-simple-k8s
 
-This is an example of a simple proxy charm used by Open Source Mano (OSM), written in the [Python Operator Framwork](https://github.com/canonical/operator)
+This is a WORK IN PROGRESS example of a simple proxy charm used by Open Source Mano (OSM), written in the [Python Operator Framwork](https://github.com/canonical/operator)
 
 
 ## Usage
 
 To get the charm:
 ```bash
-git clone https://github.com/AdamIsrael/charm-simple
-cd charm-simple
+git clone https://github.com/AdamIsrael/charm-simple-k8s
+cd charm-simple-k8s
 # Install the submodules
 git submodule update --init
 ```
@@ -18,8 +18,6 @@ To configure the charm, you'll need to have an SSH-accessible machine. You'll ne
 To deploy to juju:
 ```
 juju deploy . --config ssh-hostname=10.135.22.x --config ssh-username=ubuntu --config ssh-password=ubuntu --resource ubuntu_image=ubuntu/ubuntu:latest
-
-
 ```
 
 ```
@@ -29,11 +27,11 @@ juju status
 
 To test the SSH credentials, run the `verify-ssh-credentials` action and inspect it's output:
 ```
-$ juju run-action simple/0 verify-ssh-credentials
+$ juju run-action simple-k8s/0 verify-ssh-credentials
 Action queued with id: "9"
 
 $ juju show-action-output 9
-UnitId: simple/0
+UnitId: simple-k8s/0
 results:
   Stdout: |
     Verified!
@@ -48,7 +46,7 @@ timing:
 To exercise the charm, run the `touch` function
 
 ```
-juju run-action simple/0 touch filename=/home/ubuntu/firsttouch
+juju run-action simple-k8s/0 touch filename=/home/ubuntu/firsttouch
 ```
 
 Then ssh to the remote machine and verify that the file has been created.
