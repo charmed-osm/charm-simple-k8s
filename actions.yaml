@@ -1,3 +1,5 @@
+hello:
+    description: "Says hello"
 touch:
     description: "Touch a file on the VNF."
     params:
