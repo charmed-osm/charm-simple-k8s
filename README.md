@@ -7,7 +7,7 @@ This is a WORK IN PROGRESS example of a simple proxy charm used by Open Source M
 
 To get the charm:
 ```bash
-git clone https://github.com/AdamIsrael/charm-simple-k8s
+git clone https://github.com/charmed-osm/charm-simple-k8s
 cd charm-simple-k8s
 # Install the submodules
 git submodule update --init
