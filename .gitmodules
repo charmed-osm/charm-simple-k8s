@@ -3,7 +3,7 @@
 	url = https://github.com/canonical/operator
 [submodule "mod/charms.osm"]
 	path = mod/charms.osm
-	url = https://github.com/AdamIsrael/charms.osm
+	url = https://github.com/charmed-osm/charms.osm
 [submodule "mod/charms"]
 	path = mod/charms
 	url = https://github.com/AdamIsrael/charms.requirementstxt
