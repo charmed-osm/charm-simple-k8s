@@ -17,28 +17,29 @@ from ops.model import (
 import os
 import subprocess
 
+
 def install_dependencies():
     # Make sure Python3 + PIP are available
     if not os.path.exists("/usr/bin/python3") or not os.path.exists("/usr/bin/pip3"):
-        # This is needed when running as a k8s charm, as the ubuntu:latest 
+        # This is needed when running as a k8s charm, as the ubuntu:latest
         # image doesn't include either package.
 
         # Update the apt cache
         subprocess.check_call(["apt-get", "update"])
 
         # Install the Python3 package
-        subprocess.check_call(
-            ["apt-get", "install", "-y", "python3", "python3-pip"],
-        )
+        subprocess.check_call(["apt-get", "install", "-y", "python3", "python3-pip"],)
 
+
+    # Install the build dependencies for our requirements (paramiko)
+    subprocess.check_call(["apt-get", "install", "-y", "libffi-dev", "libssl-dev"],)
+
+    REQUIREMENTS_TXT = "{}/requirements.txt".format(os.environ["JUJU_CHARM_DIR"])
+    if os.path.exists(REQUIREMENTS_TXT):
         subprocess.check_call(
             ["apt-get", "install", "-y", "python3-paramiko", "openssh-client"],
         )
-    # REQUIREMENTS_TXT = "{}/requirements.txt".format(os.environ["JUJU_CHARM_DIR"])
-    # if os.path.exists(REQUIREMENTS_TXT):
-    #     subprocess.check_call(
-    #         [sys.executable, "-m", "pip", "install", "-r", REQUIREMENTS_TXT],
-    #     )
+
 
 try:
     from charms.osm.sshproxy import SSHProxy
@@ -46,19 +47,19 @@ except Exception as ex:
     install_dependencies()
     from charms.osm.sshproxy import SSHProxy
 
-# from remote_pdb import RemotePdb
 
-
-class SimpleCharm(CharmBase):
+class SimpleProxyCharm(CharmBase):
     state = StoredState()
 
     def __init__(self, *args):
         super().__init__(*args)
 
-        # RemotePdb('127.0.0.1', 4444).set_trace()
-        # self.state.set_default(is_started=False)
+        # An example of setting charm state
+        # that's persistent across events
+        self.state.set_default(is_started=False)
 
-        # self.state.is_started = False
+        if not self.state.is_started:
+            self.state.is_started = True
 
         # Register all of the events we want to observe
         for event in (
@@ -82,30 +83,6 @@ class SimpleCharm(CharmBase):
         ):
             self.framework.observe(event, self)
 
-    def configure_pod(self, event):
-        print("Configuring pod spec")
-        self.model.unit.status = MaintenanceStatus('Configuring pod')
-
-        # Get image details
-        # image_details = 
-        image_details = self.ubuntu_image.fetch()
-        print(image_details)
-
-        self.model.pod.set_spec({
-            'containers': [{
-                'name': self.framework.model.app.name,
-                'imageDetails': image_details,
-                # 'ports': [{
-                #     'containerPort': int(self.framework.model.config['http_port']),
-                #     'protocol': 'TCP',
-                # }],
-            }],
-        })
-        print("pod spec set")
-        self.state.is_started = True
-        self.model.unit.status = ActiveStatus()
-
-
     def get_ssh_proxy(self):
         """Get the SSHProxy instance"""
         proxy = SSHProxy(
@@ -117,7 +94,6 @@ class SimpleCharm(CharmBase):
 
     def on_config_changed(self, event):
         """Handle changes in configuration"""
-        print("config changed")
         unit = self.model.unit
 
         # Unit should go into a waiting state until verify_ssh_credentials is successful
@@ -132,7 +108,6 @@ class SimpleCharm(CharmBase):
 
     def on_start(self, event):
         """Called when the charm is being started"""
-        print("Start called")
         unit = self.model.unit
 
         if not SSHProxy.has_ssh_key():
@@ -145,22 +120,14 @@ class SimpleCharm(CharmBase):
 
     def on_touch_action(self, event):
         """Touch a file."""
-        if not self.state.is_started:
-            return event.defer()
-
-        filename = event.params["filename"]
-
-        if len(self.model.config["ssh-hostname"]):
+        try:
+            filename = event.params["filename"]
             proxy = self.get_ssh_proxy()
 
             stdout, stderr = proxy.run("touch {}".format(filename))
-            if len(stderr):
-                event.set_results({"success": False})
-                event.fail(stderr)
-            else:
-                event.set_results({"success": True})
-        else:
-            event.set_results({"success": False})
+            event.set_results({"output": stdout})
+        except Exception as ex:
+            event.fail(ex)
 
     def on_upgrade_charm(self, event):
         """Upgrade the charm."""
@@ -245,4 +212,4 @@ class SimpleCharm(CharmBase):
 
 
 if __name__ == "__main__":
-    main(SimpleCharm)
+    main(SimpleProxyCharm)
