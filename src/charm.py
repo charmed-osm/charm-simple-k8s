@@ -202,13 +202,14 @@ class SimpleProxyCharm(CharmBase):
 
         proxy = self.get_ssh_proxy()
 
-        verified = proxy.verify_credentials()
+        verified, stderr = proxy.verify_credentials()
         if verified:
             print("Verified!")
             event.set_results({"verified": True})
         else:
             print("Verification failed!")
             event.set_results({"verified": False})
+            event.fail(stderr)
 
 
 if __name__ == "__main__":
